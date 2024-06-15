@@ -15,16 +15,26 @@ resource "null_resource" "ssh_target" {
         ]
     }
     provisioner "file" {
-        source = "nginx.conf
-        destination = "tmp/default"
+        source = "nginx.conf"
+        destination = "/tmp/default"
     }
-    provisioner "remote-exec {
+    provisioner "remote-exec" {
         inline = [
             "cp -a /tmp/default /etc/nginx/sites-available/default",
             "systemctl restart nginx"
         ]
     }
     provisioner "local-exec" {
-        curl ${var.ssh_host}:667
+        command = "curl ${var.ssh_host}:6666"
     }
+}
+
+output "host" {
+    value = var.ssh_host
+}
+output "user" {
+    value = var.ssh_user
+}
+output "key" {
+    value = var.ssh_key
 }

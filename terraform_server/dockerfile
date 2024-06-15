@@ -30,6 +30,9 @@ RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 # Définir un mot de passe root (changer pour des raisons de sécurité)
 RUN echo 'root:rootpassword' | chpasswd
 
+# Créer le répertoire .ssh et définir les permissions pour root
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+
 # Définir le répertoire de travail
 WORKDIR /workspace
 

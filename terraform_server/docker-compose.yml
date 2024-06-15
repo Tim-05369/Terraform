@@ -14,6 +14,12 @@ services:
       - "6666:6666"
     volumes:
       - ./workspace:/workspace
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /home/tim/.ssh/id_ed25519:/root/.ssh/id_ed25519:ro
+      - /home/tim/.ssh/id_ed25519.pub:/root/.ssh/id_ed25519.pub:ro
+      - /home/tim/.ssh/id_ed25519.pub:/root/.ssh/authorized_keys:ro
+    environment:
+      - container=docker
 
 networks:
   mynetwork:
