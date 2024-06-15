@@ -194,3 +194,68 @@ mavariable = "terraform"
 
 On observe bien que le fichier terraform.tfvars emporte la valeur de la variable face à un export classique.
 
+### *.auto.tfvars
+production.auto.tfvars
+```
+str="auto"
+```
+
+```
+terraform apply
+```
+
+```
+Changes to Outputs:
+  ~ mavariable = "terraform" -> "auto"
+
+You can apply this plan to save these new output values
+to the Terraform state, without changing any real
+infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+mavariable = "auto"
+```
+
+Le niveau le plus fort production.auto.tfvars
+l'emporte
+
+### -var "data"
+```
+terraform apply -var 'str="data"'
+```
+
+```
+
+Changes to Outputs:
+  ~ mavariable = "auto" -> "\"data\""
+
+You can apply this plan to save these new output values
+to the Terraform state, without changing any real
+infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+mavariable = "\"data\""
+```
+
+### Similaire à ligne de commande
+var_file
