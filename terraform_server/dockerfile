@@ -1,0 +1,40 @@
+# Utiliser une image de base officielle de Debian
+FROM debian:latest
+
+# Définir le mainteneur du Dockerfile
+LABEL maintainer="Mainteneur"
+
+# Mettre à jour le système et installer des dépendances nécessaires
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    gnupg2 \
+    curl \
+    openssh-server
+
+# Créer les répertoires nécessaires pour SSH
+RUN mkdir /var/run/sshd
+
+# Télécharger la dernière version de Terraform
+RUN wget https://releases.hashicorp.com/terraform/1.5.2/terraform_1.5.2_linux_amd64.zip -O terraform.zip
+
+# Décompresser le binaire Terraform et le déplacer dans /usr/local/bin
+RUN unzip terraform.zip && mv terraform /usr/local/bin/ && rm terraform.zip
+
+# Vérifier l'installation de Terraform
+RUN terraform --version
+
+# Configurer SSH pour accepter les connexions root (nécessaire pour les tests uniquement)
+RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
+
+# Définir un mot de passe root (changer pour des raisons de sécurité)
+RUN echo 'root:rootpassword' | chpasswd
+
+# Définir le répertoire de travail
+WORKDIR /workspace
+
+# Exposer le port SSH
+EXPOSE 22
+
+# Commande pour démarrer le service SSH et garder le conteneur en fonctionnement
+CMD ["/usr/sbin/sshd", "-D"]

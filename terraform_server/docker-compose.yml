@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  terraform-server:
+    build: .
+    container_name: terraform-ssh-container
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.21.103
+    ports:
+      - "2222:22"
+    volumes:
+      - ./workspace:/workspace
+
+networks:
+  mynetwork:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.21.0/24
