@@ -1,7 +1,7 @@
 
 variable "hosts" {
     default = {
-        "127.0.0.2" = "localhost gitlab.local gitlab.me"
+        "127.0.0.2" = "localhost gitlab.local gitlab.me gitlab.tim"
         "192.169.1.168" = "gitlab.test"
         "192.169.1.170" = "prometheus.test"
     }

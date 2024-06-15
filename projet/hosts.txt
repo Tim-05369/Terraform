@@ -5,3 +5,4 @@
 192.169.1.170 prometheus.test
 127.0.0.2 localhost gitlab.local gitlab.me
 192.169.1.168 gitlab.test
+127.0.0.2 localhost gitlab.local gitlab.me gitlab.tim

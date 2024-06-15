@@ -294,6 +294,277 @@ cat hosts.txt
 
 Modifions maintenant de nouveau hosts.txt en modifiant le contenu 127.0.0.1 par 127.0.0.2:
 
+```tf
+variable "hosts" {
+    default = {
+        "127.0.0.2" = "localhost gitlab.local"
+        "192.169.1.168" = "gitlab.test"
+        "192.169.1.170" = "prometheus.test"
+    }
+}
+
+resource "null_resource" "hosts" {
+    for_each = var.hosts
+    provisioner "local-exec" {
+        command = "echo '${each.key} ${each.value}' >> hosts.txt"
+    }
+}
 ```
 
 ```
+terraform apply
+```
+
+```
+null_resource.hosts["192.169.1.168"]: Refreshing state... [id=7360921043659934714]
+null_resource.hosts["192.169.1.170"]: Refreshing state... [id=5072415424503691076]
+null_resource.hosts["127.0.0.1"]: Refreshing state... [id=3332246357530035658]
+
+Terraform used the selected providers to generate the
+following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+  - destroy
+
+Terraform will perform the following actions:
+
+  # null_resource.hosts["127.0.0.1"] will be destroyed
+  # (because key ["127.0.0.1"] is not in for_each map)
+  - resource "null_resource" "hosts" {
+      - id = "3332246357530035658" -> null
+    }
+
+  # null_resource.hosts["127.0.0.2"] will be created
+  + resource "null_resource" "hosts" {
+      + id = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.hosts["127.0.0.1"]: Destroying... [id=3332246357530035658]
+null_resource.hosts["127.0.0.1"]: Destruction complete after 0s
+null_resource.hosts["127.0.0.2"]: Creating...
+null_resource.hosts["127.0.0.2"]: Provisioning with 'local-exec'...
+null_resource.hosts["127.0.0.2"] (local-exec): Executing: ["/bin/sh" "-c" "echo '127.0.0.2 localhost gitlab.local' >> hosts.txt"]
+null_resource.hosts["127.0.0.2"]: Creation complete after 0s [id=1375006285980059641]
+```
+
+Il m'informe bien que ma modification a eu lieu, je confirm.
+
+On check le fichier hosts.txt qu'on a pas supprimé.
+
+```
+cat hosts.txt
+```
+
+```
+127.0.0.1 localhost gitlab.local
+192.169.1.170 prometheus.test
+192.169.1.168 gitlab.test
+127.0.0.2 localhost gitlab.local
+```
+
+Et là on observe que finalement il a été rajouter la ligne et qu'il est incapable de lui-même de voir et de se dire que telle ligne il faut la drop. Elle n'a pas de raison d'exister.
+
+Modifions encore le contenue de notre fichier en y ajoutant `gitlab.me`.
+
+```
+
+variable "hosts" {
+    default = {
+        "127.0.0.2" = "localhost gitlab.local gitlab.me"
+        "192.169.1.168" = "gitlab.test"
+        "192.169.1.170" = "prometheus.test"
+    }
+}
+
+resource "null_resource" "hosts" {
+    for_each = var.hosts
+    triggers = {
+        foo = each.value
+    }
+    provisioner "local-exec" {
+        command = "echo '${each.key} ${each.value}' >> hosts.txt"
+    }
+}
+```
+
+```sh
+terraform apply
+```
+
+Résultat : 
+```
+null_resource.hosts["192.169.1.168"]: Refreshing state... [id=7360921043659934714]
+null_resource.hosts["192.169.1.170"]: Refreshing state... [id=5072415424503691076]
+null_resource.hosts["127.0.0.2"]: Refreshing state... [id=1375006285980059641]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against
+your configuration and found no differences, so no
+changes are needed.
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+```
+
+Si on observe les résultats, on voit qu'en faisant une update de valeur et non pas de clé, on a pas d'exécutionbh de la part de terraform nous demandant de confirmer la modification.
+
+## Trigger
+Il existe en Terraform le trigger. 
+On le place juste derrière notre foreach.
+
+```
+variable "hosts" {
+    default = {
+        "127.0.0.2" = "localhost gitlab.local gitlab.me"
+        "192.169.1.168" = "gitlab.test"
+        "192.169.1.170" = "prometheus.test"
+    }
+}
+resource "null_resource" "hosts" {
+    for_each = var.hosts
+    triggers = {
+        foo = each.value
+    }
+    provisioner "local-exec" {
+        command = "echo '${each.key} ${each.value}' >> hosts.txt"
+    }
+}
+```
+
+avec ce trigger, tout se déclanchera quand il y aura une modification de valeur.
+
+```sh
+terraform apply
+```
+
+```
+null_resource.hosts["127.0.0.2"]: Refreshing state... [id=1375006285980059641]
+null_resource.hosts["192.169.1.170"]: Refreshing state... [id=5072415424503691076]
+null_resource.hosts["192.169.1.168"]: Refreshing state... [id=7360921043659934714]
+
+Terraform used the selected providers to generate the
+following execution plan. Resource actions are
+indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # null_resource.hosts["127.0.0.2"] must be replaced
+-/+ resource "null_resource" "hosts" {
+      ~ id       = "1375006285980059641" -> (known after apply)
+      + triggers = { # forces replacement
+          + "foo" = "localhost gitlab.local gitlab.me"
+        }
+    }
+
+  # null_resource.hosts["192.169.1.168"] must be replaced
+-/+ resource "null_resource" "hosts" {
+      ~ id       = "7360921043659934714" -> (known after apply)
+      + triggers = { # forces replacement
+          + "foo" = "gitlab.test"
+        }
+    }
+
+  # null_resource.hosts["192.169.1.170"] must be replaced
+-/+ resource "null_resource" "hosts" {
+      ~ id       = "5072415424503691076" -> (known after apply)
+      + triggers = { # forces replacement
+          + "foo" = "prometheus.test"
+        }
+    }
+
+Plan: 3 to add, 0 to change, 3 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.hosts["127.0.0.2"]: Destroying... [id=1375006285980059641]
+null_resource.hosts["192.169.1.170"]: Destroying... [id=5072415424503691076]
+null_resource.hosts["192.169.1.168"]: Destroying... [id=7360921043659934714]
+null_resource.hosts["192.169.1.170"]: Destruction complete after 0s
+null_resource.hosts["192.169.1.168"]: Destruction complete after 0s
+null_resource.hosts["192.169.1.170"]: Creating...
+null_resource.hosts["127.0.0.2"]: Destruction complete after 0s
+null_resource.hosts["192.169.1.170"]: Provisioning with 'local-exec'...
+null_resource.hosts["192.169.1.170"] (local-exec): Executing: ["/bin/sh" "-c" "echo '192.169.1.170 prometheus.test' >> hosts.txt"]
+null_resource.hosts["192.169.1.170"]: Creation complete after 0s [id=4341223260810170799]
+null_resource.hosts["127.0.0.2"]: Creating...
+null_resource.hosts["192.169.1.168"]: Creating...
+null_resource.hosts["192.169.1.168"]: Provisioning with 'local-exec'...
+null_resource.hosts["127.0.0.2"]: Provisioning with 'local-exec'...
+null_resource.hosts["127.0.0.2"] (local-exec): Executing: ["/bin/sh" "-c" "echo '127.0.0.2 localhost gitlab.local gitlab.me' >> hosts.txt"]
+null_resource.hosts["192.169.1.168"] (local-exec): Executing: ["/bin/sh" "-c" "echo '192.169.1.168 gitlab.test' >> hosts.txt"]
+null_resource.hosts["127.0.0.2"]: Creation complete after 0s [id=8775237600488870554]
+null_resource.hosts["192.169.1.168"]: Creation complete after 0s [id=7815776584721952470]
+```
+
+Ajoutons comme valeur gitlab.tim par exemple.
+
+Puis reexécuton 
+```
+terraform apply
+```
+
+On se rend compte que les modifs sont bien prise en compte en fonction des valeurs.
+
+```
+Terraform used the selected providers to generate the
+following execution plan. Resource actions are
+indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # null_resource.hosts["127.0.0.2"] must be replaced
+-/+ resource "null_resource" "hosts" {
+      ~ id       = "8775237600488870554" -> (known after apply)
+      ~ triggers = { # forces replacement
+          ~ "foo" = "localhost gitlab.local gitlab.me" -> "localhost gitlab.local gitlab.me gitlab.tim"
+        }
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.hosts["127.0.0.2"]: Destroying... [id=8775237600488870554]
+null_resource.hosts["127.0.0.2"]: Destruction complete after 0s
+null_resource.hosts["127.0.0.2"]: Creating...
+null_resource.hosts["127.0.0.2"]: Provisioning with 'local-exec'...
+null_resource.hosts["127.0.0.2"] (local-exec): Executing: ["/bin/sh" "-c" "echo '127.0.0.2 localhost gitlab.local gitlab.me gitlab.tim' >> hosts.txt"]
+null_resource.hosts["127.0.0.2"]: Creation complete after 0s [id=6552627749914505529]
+```
+
+Fichier Host :
+```
+127.0.0.1 localhost gitlab.local
+192.169.1.170 prometheus.test
+192.169.1.168 gitlab.test
+127.0.0.2 localhost gitlab.local
+192.169.1.170 prometheus.test
+127.0.0.2 localhost gitlab.local gitlab.me
+192.169.1.168 gitlab.test
+127.0.0.2 localhost gitlab.local gitlab.me gitlab.tim
+```
+
+```
+terraform destroy
+```
+
+## List
+Parcourir une liste c'est ``
