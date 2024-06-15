@@ -14,4 +14,17 @@ resource "null_resource" "ssh_target" {
             "apt install -qq -y nginx >/dev/null"
         ]
     }
+    provisioner "file" {
+        source = "nginx.conf
+        destination = "tmp/default"
+    }
+    provisioner "remote-exec {
+        inline = [
+            "cp -a /tmp/default /etc/nginx/sites-available/default",
+            "systemctl restart nginx"
+        ]
+    }
+    provisioner "local-exec" {
+        curl ${var.ssh_host}:667
+    }
 }

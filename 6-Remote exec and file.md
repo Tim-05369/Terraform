@@ -84,30 +84,45 @@ these actions if you run "terraform apply" now.
 terraform plan
 ```
 
-```
-terraform apply
-```
-
 
 ```
-
+docker cp /home/tim/.ssh/id_ed25519 <container_id>:/root/.ssh/id_ed25519
+docker cp /home/tim/.ssh/id_ed25519.pub <container_id>:/root/.ssh/id_ed25519.pub
 ``` 
 
 ```
 docker cp /home/tim/.ssh/id_ed25519.pub f4a07020fe04:/root/.ssh/id_ed25519.pub
 ```
 
+Ensuite écrire : 
+```sh
+# /.ssh/config
+Host *
+    IdentityFile /root/.ssh/id_ed25519
+    IdentitiesOnly yes
 ```
-null_resource.ssh_target: Refreshing state... [id=9075138910488658201]
 
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+Test connexion
+
+```sh
+ssh -i /root/.ssh/id_ed25519 <user>@<hostname>
+```
+
+```
+terraform apply
+```
+
+```
+Terraform used the selected providers to generate the
+following execution plan. Resource actions are
+indicated with the following symbols:
 -/+ destroy and then create replacement
 
 Terraform will perform the following actions:
 
   # null_resource.ssh_target is tainted, so must be replaced
 -/+ resource "null_resource" "ssh_target" {
-      ~ id = "9075138910488658201" -> (known after apply)
+      ~ id = "6765777444078915472" -> (known after apply)
     }
 
 Plan: 1 to add, 0 to change, 1 to destroy.
@@ -118,7 +133,7 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-null_resource.ssh_target: Destroying... [id=9075138910488658201]
+null_resource.ssh_target: Destroying... [id=6765777444078915472]
 null_resource.ssh_target: Destruction complete after 0s
 null_resource.ssh_target: Creating...
 null_resource.ssh_target: Provisioning with 'remote-exec'...
@@ -131,32 +146,16 @@ null_resource.ssh_target (remote-exec):   Certificate: false
 null_resource.ssh_target (remote-exec):   SSH Agent: true
 null_resource.ssh_target (remote-exec):   Checking Host Key: false
 null_resource.ssh_target (remote-exec):   Target Platform: unix
-null_resource.ssh_target (remote-exec): Connecting to remote host via SSH...
-null_resource.ssh_target (remote-exec):   Host: 192.168.21.103
-null_resource.ssh_target (remote-exec):   User: root
-null_resource.ssh_target (remote-exec):   Password: false
-null_resource.ssh_target (remote-exec):   Private key: true
-null_resource.ssh_target (remote-exec):   Certificate: false
-null_resource.ssh_target (remote-exec):   SSH Agent: true
-null_resource.ssh_target (remote-exec):   Checking Host Key: false
-null_resource.ssh_target (remote-exec):   Target Platform: unix
-null_resource.ssh_target (remote-exec): Connecting to remote host via SSH...
-null_resource.ssh_target (remote-exec):   Host: 192.168.21.103
-null_resource.ssh_target (remote-exec):   User: root
-null_resource.ssh_target (remote-exec):   Password: false
-null_resource.ssh_target (remote-exec):   Private key: true
-null_resource.ssh_target (remote-exec):   Certificate: false
-null_resource.ssh_target (remote-exec):   SSH Agent: true
-null_resource.ssh_target (remote-exec):   Checking Host Key: false
-null_resource.ssh_target (remote-exec):   Target Platform: unix
-null_resource.ssh_target (remote-exec): Connecting to remote host via SSH...
-null_resource.ssh_target (remote-exec):   Host: 192.168.21.103
-null_resource.ssh_target (remote-exec):   User: root
-null_resource.ssh_target (remote-exec):   Password: false
-null_resource.ssh_target (remote-exec):   Private key: true
-null_resource.ssh_target (remote-exec):   Certificate: false
-null_resource.ssh_target (remote-exec):   SSH Agent: true
-null_resource.ssh_target (remote-exec):   Checking Host Key: false
-null_resource.ssh_target (remote-exec):   Target Platform: unix
-null_resource.ssh_target: Still creating... [10s elapsed]
+null_resource.ssh_target (remote-exec): Connected!
+
+null_resource.ssh_target (remote-exec): WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+
+null_resource.ssh_target (remote-exec): WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+null_resource.ssh_target (remote-exec): debconf: delaying package configuration, since apt-utils is not installed
+null_resource.ssh_target: Creation complete after 4s [id=8664684964139864483]
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
 ```
+

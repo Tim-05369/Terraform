@@ -4,11 +4,14 @@ services:
   terraform-server:
     build: .
     container_name: terraform-ssh-container
+    privileged: true
     networks:
       mynetwork:
         ipv4_address: 192.168.21.103
     ports:
       - "2222:22"
+      - "667:667"
+      - "6666:6666"
     volumes:
       - ./workspace:/workspace
 
