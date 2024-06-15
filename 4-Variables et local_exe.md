@@ -567,4 +567,99 @@ terraform destroy
 ```
 
 ## List
-Parcourir une liste c'est ``
+Parcourir une liste c'est `count = ${length(var.hosts)}` c'est une sorte de while et donc la, par exemple, il va faire 2 fois (longueur de la variable hosts) et ensuit pour chaque valeur de host, il faut récupérer l'élément de la boucle. `${element(var.hosts, count.index)} >> hosts.txt`.
+
+Nouveau code de main.tf
+
+```
+variable "hosts" {
+    default = ["127.0.0.1 localhost", "192.168.1.133 gitlab.test"]
+}
+resource "null_resource" "hosts" {
+    count = "${length(var.hosts)}"
+    provisioner "local-exec" {
+        command = "echo '$(element(var.hosts, count.index))' >> hosts.txt"
+    }
+}
+```
+
+
+```
+terraform apply
+```
+
+```
+null_resource.hosts["127.0.0.2"]: Refreshing state... [id=6552627749914505529]
+null_resource.hosts["192.169.1.170"]: Refreshing state... [id=4341223260810170799]
+null_resource.hosts["192.169.1.168"]: Refreshing state... [id=7815776584721952470]
+
+Terraform used the selected providers to generate the
+following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+  - destroy
+
+Terraform will perform the following actions:
+
+  # null_resource.hosts[0] will be created
+  + resource "null_resource" "hosts" {
+      + id = (known after apply)
+    }
+
+  # null_resource.hosts[1] will be created
+  + resource "null_resource" "hosts" {
+      + id = (known after apply)
+    }
+
+  # null_resource.hosts["127.0.0.2"] will be destroyed
+  # (because resource does not use for_each)
+  - resource "null_resource" "hosts" {
+      - id       = "6552627749914505529" -> null
+      - triggers = {
+          - "foo" = "localhost gitlab.local gitlab.me gitlab.tim"
+        } -> null
+    }
+
+  # null_resource.hosts["192.169.1.168"] will be destroyed
+  # (because resource does not use for_each)
+  - resource "null_resource" "hosts" {
+      - id       = "7815776584721952470" -> null
+      - triggers = {
+          - "foo" = "gitlab.test"
+        } -> null
+    }
+
+  # null_resource.hosts["192.169.1.170"] will be destroyed
+  # (because resource does not use for_each)
+  - resource "null_resource" "hosts" {
+      - id       = "4341223260810170799" -> null
+      - triggers = {
+          - "foo" = "prometheus.test"
+        } -> null
+    }
+
+Plan: 2 to add, 0 to change, 3 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+null_resource.hosts["127.0.0.2"]: Destroying... [id=6552627749914505529]
+null_resource.hosts["192.169.1.170"]: Destroying... [id=4341223260810170799]
+null_resource.hosts["192.169.1.168"]: Destroying... [id=7815776584721952470]
+null_resource.hosts["192.169.1.170"]: Destruction complete after 0s
+null_resource.hosts["127.0.0.2"]: Destruction complete after 0s
+null_resource.hosts[1]: Creating...
+null_resource.hosts[0]: Creating...
+null_resource.hosts["192.169.1.168"]: Destruction complete after 0s
+null_resource.hosts[0]: Provisioning with 'local-exec'...
+null_resource.hosts[1]: Provisioning with 'local-exec'...
+null_resource.hosts[1] (local-exec): Executing: ["/bin/sh" "-c" "echo '$(element(var.hosts, count.index))' >> hosts.txt"]
+null_resource.hosts[0] (local-exec): Executing: ["/bin/sh" "-c" "echo '$(element(var.hosts, count.index))' >> hosts.txt"]
+null_resource.hosts[0]: Creation complete after 0s [id=2042905731532277767]
+null_resource.hosts[1]: Creation complete after 0s [id=7644773937671134369]
+```
+
+

@@ -1,18 +1,9 @@
-
 variable "hosts" {
-    default = {
-        "127.0.0.2" = "localhost gitlab.local gitlab.me gitlab.tim"
-        "192.169.1.168" = "gitlab.test"
-        "192.169.1.170" = "prometheus.test"
-    }
+    default = ["127.0.0.1 localhost", "192.168.1.133 gitlab.test"]
 }
-
 resource "null_resource" "hosts" {
-    for_each = var.hosts
-    triggers = {
-        foo = each.value
-    }
+    count = "${length(var.hosts)}"
     provisioner "local-exec" {
-        command = "echo '${each.key} ${each.value}' >> hosts.txt"
+        command = "echo '$(element(var.hosts, count.index))' >> hosts.txt"
     }
 }
