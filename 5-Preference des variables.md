@@ -168,4 +168,29 @@ Nous n'appliquons pas cette commande pour le moment.
 
 ### Terraform.tfvars
 
-Désormais utilisons le fichier terraform.tfvars
+Désormais utilisons le fichier terraform.tfvars.
+
+```
+Changes to Outputs:
+  ~ mavariable = "environnement" -> "terraform"
+
+You can apply this plan to save these new output values
+to the Terraform state, without changing any real
+infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+mavariable = "terraform"
+```
+
+On observe bien que le fichier terraform.tfvars emporte la valeur de la variable face à un export classique.
+
