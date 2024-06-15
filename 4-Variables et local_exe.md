@@ -663,3 +663,10 @@ null_resource.hosts[1]: Creation complete after 0s [id=7644773937671134369]
 ```
 
 
+Ajouter un trigger sur la valeur de chaque index du tableau pour prendre en compte les modifications.
+
+```
+triggers = {
+    foo = element(var.hosts, count.index)
+}
+```
