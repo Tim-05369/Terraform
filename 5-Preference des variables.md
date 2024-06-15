@@ -258,4 +258,33 @@ mavariable = "\"data\""
 ```
 
 ### Similaire à ligne de commande
-var_file
+varfile.tfvars
+```
+echo 'str="var_file"' > varfile.tfvars
+```
+
+```
+terraform apply -var 'str="data"' -var-file varfile.vars
+```
+
+```
+Changes to Outputs:
+  ~ mavariable = "\"data\"" -> "var_file"
+
+You can apply this plan to save these new output values
+to the Terraform state, without changing any real
+infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+mavariable = "var_file"
+```
