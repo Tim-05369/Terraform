@@ -1,6 +1,6 @@
 # Provider docker images et conteneurs
 - Mise en place de la socket si à distance
-- Faille de sécurité
+- Attentions aux failles de sécurité !
 - activation de la socket docker
 
 ```
@@ -10,13 +10,13 @@ ExecStart=
 ExecStart=/usr/bin/dockerd -H tcp://192.168.21.103:2375 -H unix:///var/run/docker.sock
 ```
 
-```
+```sh
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
 ## Utiliser docker provider
-```
+```tf
 provider "docker" {
     host = "tcp://192.168.21.103:2375"
 }
@@ -25,14 +25,14 @@ provider "docker" {
 Rq : possible par la socket unix
 
 - Télécharger une image
-```
+```tf
 resource "docker_image" "nginx" {
     name = "nginx:latest"
 }
 ```
 
 - Lancement du conteneur
-```
+```tf
 resource "docker_container" "nginx" {
     image = docker_image.nginx.latest
     name = "enginecks"
@@ -44,7 +44,7 @@ resource "docker_container" "nginx" {
 ```
 
 main.tf
-```
+```tf
 provider "docker" {
     host = "tcp://${var.ssh_host}:2375"
 }
