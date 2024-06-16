@@ -1,1 +1,1 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"docker_install","Source":"./modules/docker_install","Dir":"modules/docker_install"}]}
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"docker_install","Source":"./modules/docker_install","Dir":"modules/docker_install"},{"Key":"docker_run","Source":"./modules/docker_run","Dir":"modules/docker_run"}]}

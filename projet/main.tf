@@ -8,3 +8,8 @@ module "docker_install" {
     ssh_user = var.ssh_user
     ssh_key = var.ssh_key
 }
+
+module "docker_run" {
+    source = "./modules/docker_run/"
+    ssh_host = var.ssh_host
+}
