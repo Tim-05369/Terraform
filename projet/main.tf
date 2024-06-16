@@ -13,3 +13,7 @@ module "docker_run" {
     source = "./modules/docker_run/"
     ssh_host = var.ssh_host
 }
+
+output "ip_container" {
+    value = module.docker_run.container.nginx.ip_address
+}
