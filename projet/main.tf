@@ -1,6 +1,7 @@
 variable "ssh_host" {}
 variable "ssh_user" {}
 variable "ssh_key" {}
+
 resource "null_resource" "ssh_target" {
     connection {
         type = "ssh"
@@ -10,22 +11,41 @@ resource "null_resource" "ssh_target" {
     }
     provisioner "remote-exec" {
         inline = [
-            "apt update -qq >/dev/null",
-            "apt install -qq -y nginx >/dev/null"
+            "sudo apt update -qq >/dev/null",
+            "curl -fsSL https://get.docker.com -o get-docker.sh"
+            "sudo chmod 755 get-docker.sh",
+            "sudo ./get-docker.sh >/dev/null"
         ]
     }
     provisioner "file" {
-        source = "nginx.conf"
-        destination = "/tmp/default"
+        source = "startup-options.conf"
+        destination = "tmp/startup-options.conf"
     }
     provisioner "remote-exec" {
         inline = [
-            "cp -a /tmp/default /etc/nginx/sites-available/default",
-            "systemctl restart nginx"
+            "sudo mkdir -p /etc/systemd/system/docker.service.d/",
+            "sudo cp /tmp/startup-options.conf /etc/systemd/system/docker.service.d/startup_options.conf",
+            "sudo systemctl daemon-reload",
+            "sudo systemctl restart docker",
+            "sudo usermod -aG docker tim"
         ]
     }
-    provisioner "local-exec" {
-        command = "curl ${var.ssh_host}:6666"
+}
+
+provider "docker" {
+    host = "tcp://${var.ssh_host}:2375
+}
+
+resource "docker_image" "nginx" {
+    name = "nginx:latest"
+}
+
+resource "docker_container "nginx" {
+    image = docker_image.nginx.latest
+    name = "enginecks
+    ports {
+        internal = 80
+        external = 80
     }
 }
 
