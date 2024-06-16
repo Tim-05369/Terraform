@@ -26,7 +26,9 @@ resource "null_resource" "ssh_target" {
             "sudo cp /tmp/startup-options.conf /etc/systemd/system/docker.service.d/startup_options.conf",
             "sudo systemctl daemon-reload",
             "sudo systemctl restart docker",
-            "sudo usermod -aG docker tim"
+            "sudo usermod -aG docker tim",
+            "sudo ufw allow 2375",
+            "sudo ufw allow 2375 reload"
         ]
     }
 }
