@@ -17,5 +17,5 @@ module "docker_run" {
 }
 
 output "ip_container" {
-    value = module.docker_run.container.nginx.ip_address
+    value = module.docker_run.ip_docker
 }

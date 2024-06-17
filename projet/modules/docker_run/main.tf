@@ -7,19 +7,35 @@ terraform {
   }
 }
 
-resource "docker_volume" "timvol" {
+resource "null_resource" "ssh_target" {
+    connection {
+        type = "ssh"
+        user = var.ssh_user
+        host = var.ssh_host
+        private_key = file(var.ssh_key)
+    }
+    provisioner "remote-exec" {
+        inline = [
+            "sudo mkdir -p /srv/data/",
+            "sudo chmod 777 -R /srv/data/",
+            "sleep 5s"
+        ]
+    }
+}
+
+provider "docker" {
+    host = "tcp://${var.ssh_host}:2375"
+}
+
+resource "docker_volume" "timkeyvol" {
     name = "myvol2"
     driver = "local"
     driver_opts = {
         o = "bind"
         type = "none"
-        device = "/usr/data/"
+        device = "/srv/data/"
     }
     depends_on = [ null_resource.ssh_target ]
-}
-
-provider "docker" {
-    host = "tcp://${var.ssh_host}:2375"
 }
 
 resource "docker_network" "tim" {

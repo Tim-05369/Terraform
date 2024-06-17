@@ -28,7 +28,7 @@ resource "null_resource" "ssh_target" {
             "sudo systemctl restart docker",
             "sudo usermod -aG docker tim",
             "sudo ufw allow 2375",
-            "sudo ufw allow 2375 reload"
+            "sudo ufw reload"
         ]
     }
 }
