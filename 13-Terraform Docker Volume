@@ -1,0 +1,104 @@
+# Terraform Docker Volume
+- Créer un Volume
+- L'attacher à un conteneur
+- Faire un tuning du volume
+
+## Docs
+|Documentation|Url|
+|-------------|---|
+|Doc volume   |https://www.terraform.io/docs/providers/docker/r/volume.html|
+|Doc container|https://www.terraform.io/docs/providers/docker/r/container.html|
+
+## Création d'un volume
+```tf
+resource "docker_volume" "timvol" {
+    name = "myvol"
+}
+```
+
+```tf
+docker volume ls
+```
+
+```
+terraform apply -auto-approve
+```
+
+## Intégration du module dans le conteneur
+```tf
+resource "docker_container" "nginx" {
+    image = docker_image.nginx.latest
+    name = "enginecks"
+    ports {
+        internal = 80
+        external = 80
+    }
+    networks_advanced {
+        name = docker_network.tim.name
+    }
+    volumes {
+        volume_name = docker_volume.timkeyvol.name
+        container_path = "/usr/share/nginx/html/"
+    }
+}
+```
+
+```sh
+terraform apply
+```
+
+La machine répond
+
+```sh
+docker volume inspect
+```
+
+```sh
+sudo ls /var/lib/docker/volumes/myvol/_data
+```
+
+```tf
+resource "docker_volume" "timvol" {
+    name = "myvol"
+    driver = "local"
+    driver_opts = {
+        o = "bind"
+        type = "none"
+        device = "/usr/data/"
+    }
+    depends_on = [ null_resource.ssh_target ]
+}
+```
+
+```tf
+terraform plan
+```
+
+## Plus complet :
+```tf
+resource "null_resource" {
+    connection {
+        type = "ssh"
+        user = var.ssh_user
+        host = var.ssh_host
+        private_key = file(var.ssh_key)
+    }
+    provisioner "remote-exec" {
+        inline = [
+            "sudo mkdir -p /srv/data/",
+            "sudo chmod 777 -R /srv/data/",
+            "sleep 5s"
+        ]
+    }
+}
+resource "docker_volume" timvol" {
+    name = "myvol"
+    driver = "local"
+    driver_opts = {
+        o = "bind"
+        type = "none"
+        device = "/srv/data/
+    }
+    depends_on = [null_resource.ssh_target]
+}
+```
