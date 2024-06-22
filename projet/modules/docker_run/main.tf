@@ -27,6 +27,15 @@ provider "docker" {
     host = "tcp://${var.ssh_host}:2375"
 }
 
+data "docker_registry_image" "dockerhub" {
+    name = "tim053692/terfock:1.0"
+}
+
+resource "docker_image" "terfock" {
+    name = data.docker_registry_image.dockerhub.name
+    pull_triggers = [ data.docker_registry_image.dockerhub.sha256_digest ]
+}
+
 resource "docker_volume" "timkeyvol" {
     name = "myvol2"
     driver = "local"

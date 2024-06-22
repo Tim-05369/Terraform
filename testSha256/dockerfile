@@ -1,0 +1,4 @@
+FROM alpine
+
+RUN echo hello > /tmp/tim
+RUN echo hello2 > /tmp/tim
