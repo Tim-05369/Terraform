@@ -1,0 +1,67 @@
+# 
+
+Passer de la socket docker tcp à un tunnel ssh via le provider terraform
+Plus sécurisé car sinon il faut faire du TLS, sécuriser les firewalls. A la fin petite astuce pour l'utilisation des triggers.
+
+## Initailisation
+1. VM - Check IP Machine `hostname -I`
+2. Local - `docker -H ssh://192.168.1.28 ps`
+Docker permet de passer par le ssh pour pouvoir l'interroger. 
+On va faire pareil pour les modules
+3. Docker_run
+```th
+provider "docker" {
+    host = "ssh://${var.ssh_user}@${var.ssh_host}:22"
+}
+```
+4. Ajouter le ssh_user dans variables
+5. Modifier le main.th
+6. `terraform plan` - Nous dit qu'il n'y a rien a faire (car il n'y a pas eu de modif mais au moins il s'est connecté)
+7. On va utiliser ce qu'on appelle un trigger
+8. Dans le module d'installation de docker, on a été édité notre module `docker install`
+9. On a été éditer notre fichier de configuration qui permettait d'éditer la socket docker. (Startup_option)
+10. Modifier Startup_option
+Avant
+```th
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H tcp://192.168.1.28:2375 -H unix:///var/run/docker.sock
+```
+
+Après
+```th
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock
+```
+
+Comme il n'est pas sous forme de template, terraform ne va pas réinstaller docker.
+
+On a besoin qu'il réinstalle docker pour éviter qu'il ait cette tcp d'ouvert.
+
+On peut utiliser n'importe quelle variable. on va utiliser quelque chose qui va faire en sorte que le trigger va se déclencher à chaque fois. On va utiliser une fonction avec timestamp()
+
+Simple pour ça créer un 
+```
+triggers = {
+    force = timestamp()
+}
+```
+
+`terraform apply -auto-approve`
+
+Une fois qu'on a fait le docker_install, il va positionner le fichier.
+Faire un systemctl restart
+Avoir modifié notre fichier localement.
+
+Si on fait un `docker -H tcp://192.168.1.28:2375 ps` ne marche plus mais la socket ssh `docker -H ssh://tim@192.168.1.28 ps`.
+
+```sh
+tim@tim-System-Product-Name:~/Git/Terraform/projet$ docker -H ssh://tim@192.168.1.28 ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS              PORTS                  NAMES
+8d3b41bf815b   372ef0d81712   "docker-entrypoint.s…"   2 minutes ago   Up About a minute   0.0.0.0:8080->80/tcp   wordpress
+76a786692c7b   5107333e08a8   "docker-entrypoint.s…"   2 minutes ago   Up About a minute   3306/tcp, 33060/tcp    db
+tim@tim-System-Product-Name:~/Git/Terraform/projet$ docker -H tcp://192.168.1.28:2375 ps
+Cannot connect to the Docker daemon at tcp://192.168.1.28:2375. Is the docker daemon running?
+```
+

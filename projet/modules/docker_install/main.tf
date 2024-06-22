@@ -1,4 +1,8 @@
 resource "null_resource" "ssh_target" {
+    triggers = {
+        force = timestamp()
+    }
+    
     connection {
         type = "ssh"
         user = var.ssh_user
